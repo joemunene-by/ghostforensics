@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ghostforensics"
+version = "0.1.0"
+description = "Memory forensics automation tool for incident response"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Joe Munene", email = "baptiste.atanasije@gmail.com"},
+]
+keywords = ["forensics", "memory", "incident-response", "volatility", "malware"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+]
+dependencies = [
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "Jinja2>=3.1.0",
+    "pyyaml>=6.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+volatility = ["volatility3>=2.4.0"]
+yara = ["yara-python>=4.3.0"]
+all = ["volatility3>=2.4.0", "yara-python>=4.3.0"]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+ghostforensics = "ghostforensics.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/ghostsec/ghostforensics"
+Repository = "https://github.com/ghostsec/ghostforensics"
+Issues = "https://github.com/ghostsec/ghostforensics/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]

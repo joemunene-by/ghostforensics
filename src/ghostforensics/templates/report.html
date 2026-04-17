@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GhostForensics Report — {{ report.dump_path }}</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-card: #161b22;
+    --bg-table: #1c2128;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --text-dim: #8b949e;
+    --accent: #58a6ff;
+    --critical: #ff4444;
+    --high: #ff8800;
+    --medium: #ffcc00;
+    --low: #44bbff;
+    --info: #888888;
+    --green: #3fb950;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 2rem;
+  }
+  h1, h2, h3 { color: #ffffff; margin-bottom: 0.5rem; }
+  h1 { font-size: 1.8rem; border-bottom: 2px solid var(--accent); padding-bottom: 0.5rem; }
+  h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+  }
+  .header-info { color: var(--text-dim); font-size: 0.9rem; }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+  .stat-box {
+    background: var(--bg-table);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+    text-align: center;
+  }
+  .stat-box .number {
+    font-size: 2rem;
+    font-weight: bold;
+    display: block;
+  }
+  .stat-box .label {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+  }
+  .severity-critical .number { color: var(--critical); }
+  .severity-high .number { color: var(--high); }
+  .severity-medium .number { color: var(--medium); }
+  .severity-low .number { color: var(--low); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.5rem 0;
+  }
+  th {
+    background: var(--bg-table);
+    color: var(--accent);
+    text-align: left;
+    padding: 0.6rem 0.8rem;
+    border-bottom: 2px solid var(--border);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  td {
+    padding: 0.5rem 0.8rem;
+    border-bottom: 1px solid var(--border);
+  }
+  tr:hover { background: var(--bg-table); }
+  .badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .badge-critical { background: var(--critical); color: #fff; }
+  .badge-high { background: var(--high); color: #000; }
+  .badge-medium { background: var(--medium); color: #000; }
+  .badge-low { background: var(--low); color: #000; }
+  .badge-info { background: var(--info); color: #fff; }
+  .finding {
+    border-left: 4px solid var(--border);
+    padding: 0.8rem 1rem;
+    margin: 0.5rem 0;
+    background: var(--bg-table);
+    border-radius: 0 6px 6px 0;
+  }
+  .finding-critical { border-left-color: var(--critical); }
+  .finding-high { border-left-color: var(--high); }
+  .finding-medium { border-left-color: var(--medium); }
+  .finding-low { border-left-color: var(--low); }
+  .finding-title { font-weight: 600; margin-bottom: 0.3rem; }
+  .finding-desc { color: var(--text-dim); font-size: 0.9rem; }
+  .finding-meta { margin-top: 0.4rem; font-size: 0.85rem; }
+  .finding-meta span { margin-right: 1rem; }
+  .remediation { color: var(--green); }
+  .mitre { color: var(--accent); }
+  .process-tree {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.8;
+  }
+  .process-tree .suspicious { color: var(--critical); font-weight: bold; }
+  .process-tree .normal { color: var(--text); }
+  .suspicious-row { color: var(--critical); }
+  .footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>GhostForensics Report</h1>
+  </div>
+  <div class="header-info">
+    <div>Dump: {{ report.dump_path }}</div>
+    <div>Analysis: {{ report.analysis_time }}</div>
+    <div>Duration: {{ "%.2f"|format(report.duration_seconds) }}s</div>
+    {% if report.os_profile %}<div>Profile: {{ report.os_profile }}</div>{% endif %}
+  </div>
+</div>
+
+<!-- Severity Summary -->
+<div class="summary-grid">
+  <div class="stat-box severity-critical">
+    <span class="number">{{ report.severity_summary.get('critical', 0) }}</span>
+    <span class="label">Critical</span>
+  </div>
+  <div class="stat-box severity-high">
+    <span class="number">{{ report.severity_summary.get('high', 0) }}</span>
+    <span class="label">High</span>
+  </div>
+  <div class="stat-box severity-medium">
+    <span class="number">{{ report.severity_summary.get('medium', 0) }}</span>
+    <span class="label">Medium</span>
+  </div>
+  <div class="stat-box severity-low">
+    <span class="number">{{ report.severity_summary.get('low', 0) }}</span>
+    <span class="label">Low</span>
+  </div>
+  <div class="stat-box">
+    <span class="number" style="color: var(--accent);">{{ report.processes|length }}</span>
+    <span class="label">Processes</span>
+  </div>
+  <div class="stat-box">
+    <span class="number" style="color: var(--accent);">{{ report.connections|length }}</span>
+    <span class="label">Connections</span>
+  </div>
+  <div class="stat-box">
+    <span class="number" style="color: var(--accent);">{{ report.yara_matches|length }}</span>
+    <span class="label">YARA Matches</span>
+  </div>
+  <div class="stat-box">
+    <span class="number" style="color: var(--accent);">{{ report.iocs|length }}</span>
+    <span class="label">IOCs</span>
+  </div>
+</div>
+
+<!-- Findings -->
+{% if report.all_findings %}
+<h2>Findings</h2>
+<div class="card">
+  {% for finding in report.all_findings|sort(attribute='severity.value') %}
+  <div class="finding finding-{{ finding.severity.value }}">
+    <div class="finding-title">
+      <span class="badge badge-{{ finding.severity.value }}">{{ finding.severity.value }}</span>
+      {{ finding.title }}
+    </div>
+    <div class="finding-desc">{{ finding.description }}</div>
+    <div class="finding-meta">
+      <span>Analyzer: {{ finding.analyzer }}</span>
+      {% if finding.remediation %}
+      <span class="remediation">Remediation: {{ finding.remediation }}</span>
+      {% endif %}
+      {% if finding.mitre_attack %}
+      <span class="mitre">MITRE: {{ finding.mitre_attack|join(', ') }}</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Process Tree -->
+{% if report.processes %}
+<h2>Process List</h2>
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>PID</th>
+        <th>PPID</th>
+        <th>Name</th>
+        <th>Path</th>
+        <th>Command Line</th>
+        <th>Flags</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for proc in report.processes %}
+      <tr{% if proc.is_suspicious %} class="suspicious-row"{% endif %}>
+        <td>{{ proc.pid }}</td>
+        <td>{{ proc.ppid }}</td>
+        <td>{{ proc.name }}</td>
+        <td>{{ proc.path }}</td>
+        <td>{{ proc.cmdline }}</td>
+        <td>{{ proc.suspicious_flags|join(', ') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- Network Connections -->
+{% if report.connections %}
+<h2>Network Connections</h2>
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>PID</th>
+        <th>Process</th>
+        <th>Protocol</th>
+        <th>Local Address</th>
+        <th>Remote Address</th>
+        <th>State</th>
+        <th>Flags</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for conn in report.connections %}
+      <tr{% if conn.suspicious %} class="suspicious-row"{% endif %}>
+        <td>{{ conn.pid }}</td>
+        <td>{{ conn.process_name }}</td>
+        <td>{{ conn.protocol }}</td>
+        <td>{{ conn.local_addr }}:{{ conn.local_port }}</td>
+        <td>{{ conn.remote_addr }}:{{ conn.remote_port }}</td>
+        <td>{{ conn.state }}</td>
+        <td>{{ conn.suspicious_reasons|join(', ') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- YARA Matches -->
+{% if report.yara_matches %}
+<h2>YARA Matches</h2>
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>Rule</th>
+        <th>Severity</th>
+        <th>PID</th>
+        <th>Process</th>
+        <th>Description</th>
+        <th>Matched Strings</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ym in report.yara_matches %}
+      <tr>
+        <td>{{ ym.rule_name }}</td>
+        <td><span class="badge badge-{{ ym.severity.value }}">{{ ym.severity.value }}</span></td>
+        <td>{{ ym.pid }}</td>
+        <td>{{ ym.process_name }}</td>
+        <td>{{ ym.description }}</td>
+        <td>{{ ym.matched_strings|join(', ') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- IOCs -->
+{% if report.iocs %}
+<h2>Indicators of Compromise (IOCs)</h2>
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Value</th>
+        <th>Severity</th>
+        <th>Context</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ioc in report.iocs[:500] %}
+      <tr>
+        <td>{{ ioc.type.value }}</td>
+        <td><code>{{ ioc.value }}</code></td>
+        <td><span class="badge badge-{{ ioc.severity.value }}">{{ ioc.severity.value }}</span></td>
+        <td>{{ ioc.context }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if report.iocs|length > 500 %}
+  <p style="color: var(--text-dim); margin-top: 0.5rem;">Showing 500 of {{ report.iocs|length }} IOCs. Export JSON for complete list.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="footer">
+  Generated by GhostForensics v0.1.0
+</div>
+
+</body>
+</html>
