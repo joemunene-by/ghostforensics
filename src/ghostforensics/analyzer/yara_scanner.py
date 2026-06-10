@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import re
 from pathlib import Path
@@ -44,9 +45,8 @@ class _SimplifiedRule:
             if isinstance(pattern, re.Pattern):
                 if pattern.search(data):
                     matched.append(identifier)
-            elif isinstance(pattern, bytes):
-                if pattern in data:
-                    matched.append(identifier)
+            elif isinstance(pattern, bytes) and pattern in data:
+                matched.append(identifier)
         return matched
 
 
@@ -108,18 +108,14 @@ def _parse_yar_file(path: Path) -> list[_SimplifiedRule]:
                         except (ValueError, re.error):
                             pass
                     else:
-                        try:
+                        with contextlib.suppress(ValueError):
                             strings.append((identifier, bytes.fromhex(hex_str)))
-                        except ValueError:
-                            pass
                 elif s.group(4) is not None:
                     # Regex string.
-                    try:
+                    with contextlib.suppress(re.error):
                         strings.append(
                             (identifier, re.compile(s.group(4).encode()))
                         )
-                    except re.error:
-                        pass
 
         rules.append(_SimplifiedRule(rule_name, strings, metadata, tags))
     return rules
@@ -203,7 +199,11 @@ class YaraScanner(BaseAnalyzer):
                         "tags": m.tags,
                     },
                     remediation="Analyze the matched content. Cross-reference with threat intel.",
-                    mitre_attack=m.metadata.get("mitre_attack", "").split(",") if m.metadata.get("mitre_attack") else [],
+                    mitre_attack=(
+                        m.metadata.get("mitre_attack", "").split(",")
+                        if m.metadata.get("mitre_attack")
+                        else []
+                    ),
                 )
             )
         return findings
@@ -299,7 +299,7 @@ class YaraScanner(BaseAnalyzer):
             )
             for ym in yara_matches:
                 matched_strings = []
-                for offset, identifier, data_bytes in ym.strings:
+                for offset, identifier, _data_bytes in ym.strings:
                     matched_strings.append(f"{identifier} at 0x{offset:x}")
 
                 meta = dict(ym.meta) if hasattr(ym, 'meta') else {}

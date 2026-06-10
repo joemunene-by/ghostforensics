@@ -8,15 +8,31 @@ import pytest
 @pytest.fixture()
 def sample_processes() -> list[dict]:
     """A realistic process list with both legitimate and suspicious entries."""
+    s32 = "C:\\Windows\\System32"
     return [
         {"pid": 4, "ppid": 0, "name": "System", "path": "", "cmdline": ""},
-        {"pid": 348, "ppid": 4, "name": "smss.exe", "path": "C:\\Windows\\System32\\smss.exe", "cmdline": ""},
-        {"pid": 452, "ppid": 348, "name": "csrss.exe", "path": "C:\\Windows\\System32\\csrss.exe", "cmdline": ""},
-        {"pid": 528, "ppid": 348, "name": "wininit.exe", "path": "C:\\Windows\\System32\\wininit.exe", "cmdline": ""},
-        {"pid": 596, "ppid": 528, "name": "services.exe", "path": "C:\\Windows\\System32\\services.exe", "cmdline": ""},
-        {"pid": 604, "ppid": 528, "name": "lsass.exe", "path": "C:\\Windows\\System32\\lsass.exe", "cmdline": ""},
-        {"pid": 780, "ppid": 596, "name": "svchost.exe", "path": "C:\\Windows\\System32\\svchost.exe", "cmdline": ""},
-        {"pid": 2100, "ppid": 780, "name": "explorer.exe", "path": "C:\\Windows\\explorer.exe", "cmdline": ""},
+        {"pid": 348, "ppid": 4, "name": "smss.exe", "path": f"{s32}\\smss.exe", "cmdline": ""},
+        {"pid": 452, "ppid": 348, "name": "csrss.exe", "path": f"{s32}\\csrss.exe", "cmdline": ""},
+        {
+            "pid": 528, "ppid": 348, "name": "wininit.exe",
+            "path": f"{s32}\\wininit.exe", "cmdline": "",
+        },
+        {
+            "pid": 596, "ppid": 528, "name": "services.exe",
+            "path": f"{s32}\\services.exe", "cmdline": "",
+        },
+        {
+            "pid": 604, "ppid": 528, "name": "lsass.exe",
+            "path": f"{s32}\\lsass.exe", "cmdline": "",
+        },
+        {
+            "pid": 780, "ppid": 596, "name": "svchost.exe",
+            "path": f"{s32}\\svchost.exe", "cmdline": "",
+        },
+        {
+            "pid": 2100, "ppid": 780, "name": "explorer.exe",
+            "path": "C:\\Windows\\explorer.exe", "cmdline": "",
+        },
     ]
 
 
@@ -91,8 +107,14 @@ def sample_data(sample_processes, suspicious_processes) -> dict:
             },
         ],
         "handles": [
-            {"type": "Mutant", "name": "Global\\MSCTFMonitor_test", "pid": 4444, "process_name": "svchost.exe"},
-            {"type": "File", "name": "\\windows\\system32\\config\\SAM", "pid": 4550, "process_name": "mimikatz.exe"},
+            {
+                "type": "Mutant", "name": "Global\\MSCTFMonitor_test",
+                "pid": 4444, "process_name": "svchost.exe",
+            },
+            {
+                "type": "File", "name": "\\windows\\system32\\config\\SAM",
+                "pid": 4550, "process_name": "mimikatz.exe",
+            },
         ],
         "cross_process_handles": [
             {

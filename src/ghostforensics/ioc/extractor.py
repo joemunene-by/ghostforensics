@@ -7,10 +7,10 @@ import re
 from typing import Any
 
 from ghostforensics.models import (
+    IOC,
     Connection,
     Finding,
     ForensicsReport,
-    IOC,
     IOCType,
     Process,
     Severity,
@@ -180,19 +180,25 @@ class IOCExtractor:
 
         # SHA-256 (check before SHA-1 and MD5 to avoid substring matches).
         for match in _SHA256_PATTERN.finditer(text):
-            iocs.extend(self._add_ioc(IOCType.FILE_HASH_SHA256, match.group().lower(), source, severity))
+            iocs.extend(self._add_ioc(
+                IOCType.FILE_HASH_SHA256, match.group().lower(), source, severity,
+            ))
 
         # SHA-1 (only if not part of a SHA-256).
         sha256_positions = {m.start() for m in _SHA256_PATTERN.finditer(text)}
         for match in _SHA1_PATTERN.finditer(text):
             if match.start() not in sha256_positions:
-                iocs.extend(self._add_ioc(IOCType.FILE_HASH_SHA1, match.group().lower(), source, severity))
+                iocs.extend(self._add_ioc(
+                    IOCType.FILE_HASH_SHA1, match.group().lower(), source, severity,
+                ))
 
         # MD5
         sha1_positions = {m.start() for m in _SHA1_PATTERN.finditer(text)}
         for match in _MD5_PATTERN.finditer(text):
             if match.start() not in sha256_positions and match.start() not in sha1_positions:
-                iocs.extend(self._add_ioc(IOCType.FILE_HASH_MD5, match.group().lower(), source, severity))
+                iocs.extend(self._add_ioc(
+                    IOCType.FILE_HASH_MD5, match.group().lower(), source, severity,
+                ))
 
         # Registry keys
         for match in _REGISTRY_PATTERN.finditer(text):
