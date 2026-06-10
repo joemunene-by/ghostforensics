@@ -2,18 +2,12 @@
 
 from __future__ import annotations
 
-import pytest
-
 from ghostforensics.ioc.extractor import IOCExtractor
 from ghostforensics.models import (
-    Connection,
-    Finding,
-    ForensicsReport,
     IOC,
+    Connection,
+    ForensicsReport,
     IOCType,
-    Process,
-    Severity,
-    YaraMatch,
 )
 
 
@@ -126,7 +120,7 @@ class TestSTIXExport:
         """STIX patterns use correct format for different IOC types."""
         ioc = IOC(type=IOCType.IP_ADDRESS, value="45.33.32.156")
         stix = ioc.to_stix_indicator()
-        assert "[ipv4-addr:value = '45.33.32.156']" == stix["pattern"]
+        assert stix["pattern"] == "[ipv4-addr:value = '45.33.32.156']"
 
         ioc2 = IOC(type=IOCType.FILE_HASH_SHA256, value="a" * 64)
         stix2 = ioc2.to_stix_indicator()

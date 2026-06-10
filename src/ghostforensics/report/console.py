@@ -10,7 +10,6 @@ from rich.tree import Tree
 
 from ghostforensics.models import ForensicsReport, Severity
 
-
 _SEVERITY_COLORS = {
     Severity.CRITICAL: "bold red",
     Severity.HIGH: "red",
@@ -53,7 +52,9 @@ class ConsoleReporter:
         header.append(f"Duration: {report.duration_seconds:.2f}s\n", style="dim")
         if report.os_profile:
             header.append(f"Profile: {report.os_profile}\n", style="dim")
-        self.console.print(Panel(header, title="[bold]Analysis Summary[/bold]", border_style="blue"))
+        self.console.print(Panel(
+            header, title="[bold]Analysis Summary[/bold]", border_style="blue",
+        ))
 
     def _render_severity_summary(self, report: ForensicsReport) -> None:
         summary = report.severity_summary
@@ -79,7 +80,10 @@ class ConsoleReporter:
             return
 
         # Sort by severity.
-        sev_order = {Severity.CRITICAL: 0, Severity.HIGH: 1, Severity.MEDIUM: 2, Severity.LOW: 3, Severity.INFO: 4}
+        sev_order = {
+            Severity.CRITICAL: 0, Severity.HIGH: 1, Severity.MEDIUM: 2,
+            Severity.LOW: 3, Severity.INFO: 4,
+        }
         findings.sort(key=lambda f: sev_order.get(f.severity, 5))
 
         self.console.print(Panel("[bold]Findings[/bold]", border_style="red"))

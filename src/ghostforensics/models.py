@@ -144,7 +144,9 @@ class IOC(BaseModel):
             "type": "indicator",
             "spec_version": "2.1",
             "pattern_type": "stix",
-            "pattern": pattern_type_map.get(self.type, f"[artifact:payload_bin = '{self.value}']"),
+            "pattern": pattern_type_map.get(
+                self.type, f"[artifact:payload_bin = '{self.value}']",
+            ),
             "name": f"{self.type.value}: {self.value}",
             "description": self.context,
             "indicator_types": ["malicious-activity"],

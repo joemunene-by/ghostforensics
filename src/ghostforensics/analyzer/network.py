@@ -30,9 +30,7 @@ def _is_external(addr: str) -> bool:
         ip = ipaddress.ip_address(addr)
     except ValueError:
         return False
-    if ip.is_loopback or ip.is_private or ip.is_reserved or ip.is_multicast:
-        return False
-    return True
+    return not (ip.is_loopback or ip.is_private or ip.is_reserved or ip.is_multicast)
 
 
 class NetworkAnalyzer(BaseAnalyzer):
