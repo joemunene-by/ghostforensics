@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import re
 from pathlib import Path
@@ -44,9 +45,8 @@ class _SimplifiedRule:
             if isinstance(pattern, re.Pattern):
                 if pattern.search(data):
                     matched.append(identifier)
-            elif isinstance(pattern, bytes):
-                if pattern in data:
-                    matched.append(identifier)
+            elif isinstance(pattern, bytes) and pattern in data:
+                matched.append(identifier)
         return matched
 
 
@@ -57,7 +57,7 @@ def _parse_yar_file(path: Path) -> list[_SimplifiedRule]:
 
     # Very simplified parser: extract rule blocks.
     rule_pattern = re.compile(
-        r'rule\s+(\w+)(?:\s*:\s*([\w\s]+))?\s*\{(.*?)\}(?=\s*(?:rule\s|\Z))',
+        r"rule\s+(\w+)(?:\s*:\s*([\w\s]+))?\s*\{(.*?)\}(?=\s*(?:rule\s|\Z))",
         re.DOTALL,
     )
     for match in rule_pattern.finditer(text):
@@ -68,14 +68,14 @@ def _parse_yar_file(path: Path) -> list[_SimplifiedRule]:
 
         # Parse meta section.
         metadata: dict[str, str] = {}
-        meta_match = re.search(r'meta\s*:(.*?)(?=strings\s*:|condition\s*:|$)', body, re.DOTALL)
+        meta_match = re.search(r"meta\s*:(.*?)(?=strings\s*:|condition\s*:|$)", body, re.DOTALL)
         if meta_match:
             for m in re.finditer(r'(\w+)\s*=\s*"([^"]*)"', meta_match.group(1)):
                 metadata[m.group(1)] = m.group(2)
 
         # Parse strings section.
         strings: list[tuple[str, bytes | re.Pattern[bytes]]] = []
-        strings_match = re.search(r'strings\s*:(.*?)(?=condition\s*:|$)', body, re.DOTALL)
+        strings_match = re.search(r"strings\s*:(.*?)(?=condition\s*:|$)", body, re.DOTALL)
         if strings_match:
             for s in re.finditer(
                 r'(\$\w+)\s*=\s*(?:"([^"]*)"|\{([^}]*)\}|/([^/]*)/)(?:\s+(\w+))?',
@@ -94,32 +94,24 @@ def _parse_yar_file(path: Path) -> list[_SimplifiedRule]:
                         strings.append((identifier, text_str.encode()))
                 elif s.group(3) is not None:
                     # Hex string — convert to bytes.
-                    hex_str = re.sub(r'\s+', '', s.group(3))
+                    hex_str = re.sub(r"\s+", "", s.group(3))
                     # Handle wildcards by converting to regex.
-                    if '?' in hex_str:
-                        regex_str = hex_str.replace('??', '.').replace('?', '.')
+                    if "?" in hex_str:
+                        regex_str = hex_str.replace("??", ".").replace("?", ".")
                         try:
                             byte_pattern = re.compile(
-                                bytes.fromhex(
-                                    regex_str.replace('.', '00')
-                                ).replace(b'\x00', b'.'),
+                                bytes.fromhex(regex_str.replace(".", "00")).replace(b"\x00", b"."),
                             )
                             strings.append((identifier, byte_pattern))
                         except (ValueError, re.error):
                             pass
                     else:
-                        try:
+                        with contextlib.suppress(ValueError):
                             strings.append((identifier, bytes.fromhex(hex_str)))
-                        except ValueError:
-                            pass
                 elif s.group(4) is not None:
                     # Regex string.
-                    try:
-                        strings.append(
-                            (identifier, re.compile(s.group(4).encode()))
-                        )
-                    except re.error:
-                        pass
+                    with contextlib.suppress(re.error):
+                        strings.append((identifier, re.compile(s.group(4).encode())))
 
         rules.append(_SimplifiedRule(rule_name, strings, metadata, tags))
     return rules
@@ -203,7 +195,9 @@ class YaraScanner(BaseAnalyzer):
                         "tags": m.tags,
                     },
                     remediation="Analyze the matched content. Cross-reference with threat intel.",
-                    mitre_attack=m.metadata.get("mitre_attack", "").split(",") if m.metadata.get("mitre_attack") else [],
+                    mitre_attack=m.metadata.get("mitre_attack", "").split(",")
+                    if m.metadata.get("mitre_attack")
+                    else [],
                 )
             )
         return findings
@@ -228,13 +222,9 @@ class YaraScanner(BaseAnalyzer):
             process_name = target.get("process_name", "")
 
             if HAS_YARA and self._compiled_rules:
-                matches.extend(
-                    self._scan_with_yara(content, pid, process_name)
-                )
+                matches.extend(self._scan_with_yara(content, pid, process_name))
             elif self._simplified_rules:
-                matches.extend(
-                    self._scan_simplified(content, pid, process_name)
-                )
+                matches.extend(self._scan_simplified(content, pid, process_name))
 
         # Also handle pre-computed YARA matches in JSON data.
         for entry in data.get("yara_matches", []):
@@ -262,34 +252,38 @@ class YaraScanner(BaseAnalyzer):
         # Process command lines and paths as scan targets.
         for proc in data.get("processes", []):
             combined = f"{proc.get('name', '')} {proc.get('cmdline', '')} {proc.get('path', '')}"
-            targets.append({
-                "content": combined,
-                "pid": proc.get("pid", 0),
-                "process_name": proc.get("name", ""),
-            })
+            targets.append(
+                {
+                    "content": combined,
+                    "pid": proc.get("pid", 0),
+                    "process_name": proc.get("name", ""),
+                }
+            )
 
         # Memory region contents.
         for region in data.get("memory_regions", []):
             if "content" in region:
-                targets.append({
-                    "content": region["content"],
-                    "pid": region.get("pid", 0),
-                    "process_name": region.get("process_name", ""),
-                })
+                targets.append(
+                    {
+                        "content": region["content"],
+                        "pid": region.get("pid", 0),
+                        "process_name": region.get("process_name", ""),
+                    }
+                )
 
         # Raw strings extracted from dump.
         if "extracted_strings" in data:
-            targets.append({
-                "content": "\n".join(data["extracted_strings"]),
-                "pid": 0,
-                "process_name": "extracted_strings",
-            })
+            targets.append(
+                {
+                    "content": "\n".join(data["extracted_strings"]),
+                    "pid": 0,
+                    "process_name": "extracted_strings",
+                }
+            )
 
         return targets
 
-    def _scan_with_yara(
-        self, content: bytes, pid: int, process_name: str
-    ) -> list[YaraMatch]:
+    def _scan_with_yara(self, content: bytes, pid: int, process_name: str) -> list[YaraMatch]:
         """Scan content using yara-python."""
         matches: list[YaraMatch] = []
         try:
@@ -299,10 +293,10 @@ class YaraScanner(BaseAnalyzer):
             )
             for ym in yara_matches:
                 matched_strings = []
-                for offset, identifier, data_bytes in ym.strings:
+                for offset, identifier, _data_bytes in ym.strings:
                     matched_strings.append(f"{identifier} at 0x{offset:x}")
 
-                meta = dict(ym.meta) if hasattr(ym, 'meta') else {}
+                meta = dict(ym.meta) if hasattr(ym, "meta") else {}
                 severity_str = meta.get("severity", "medium")
                 try:
                     severity = Severity(severity_str)
@@ -313,7 +307,7 @@ class YaraScanner(BaseAnalyzer):
                     YaraMatch(
                         rule_name=ym.rule,
                         description=meta.get("description", ""),
-                        tags=list(ym.tags) if hasattr(ym, 'tags') else [],
+                        tags=list(ym.tags) if hasattr(ym, "tags") else [],
                         severity=severity,
                         pid=pid,
                         process_name=process_name,
@@ -325,9 +319,7 @@ class YaraScanner(BaseAnalyzer):
             logger.exception("YARA scan failed for PID %d", pid)
         return matches
 
-    def _scan_simplified(
-        self, content: bytes, pid: int, process_name: str
-    ) -> list[YaraMatch]:
+    def _scan_simplified(self, content: bytes, pid: int, process_name: str) -> list[YaraMatch]:
         """Scan content using simplified rule matching."""
         matches: list[YaraMatch] = []
         for rule in self._simplified_rules:

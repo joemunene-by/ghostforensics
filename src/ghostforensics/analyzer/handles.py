@@ -215,9 +215,7 @@ class HandleAnalyzer(BaseAnalyzer):
             if target_name.lower() in sensitive_targets:
                 findings.append(
                     self._make_finding(
-                        title=(
-                            f"Cross-process access: {source_name} -> {target_name}"
-                        ),
+                        title=(f"Cross-process access: {source_name} -> {target_name}"),
                         description=(
                             f"Process '{source_name}' (PID {source_pid}) has a handle to "
                             f"'{target_name}' (PID {target_pid}) with access rights: "

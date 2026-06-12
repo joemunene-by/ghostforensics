@@ -122,8 +122,7 @@ class InjectionAnalyzer(BaseAnalyzer):
                 findings.append(
                     self._make_finding(
                         title=(
-                            f"Suspicious DLL injection: {dll_name} in {process_name} "
-                            f"(PID {pid})"
+                            f"Suspicious DLL injection: {dll_name} in {process_name} (PID {pid})"
                         ),
                         description=(
                             f"DLL '{dll_name}' loaded into '{process_name}' (PID {pid}) "
@@ -167,10 +166,7 @@ class InjectionAnalyzer(BaseAnalyzer):
 
                 findings.append(
                     self._make_finding(
-                        title=(
-                            f"RWX memory region in {process_name} (PID {pid}) "
-                            f"at {region_addr}"
-                        ),
+                        title=(f"RWX memory region in {process_name} (PID {pid}) at {region_addr}"),
                         description=(
                             f"Process '{process_name}' (PID {pid}) has a memory region at "
                             f"{region_addr} (size: {region_size} bytes) with read-write-execute "
@@ -211,9 +207,7 @@ class InjectionAnalyzer(BaseAnalyzer):
 
             findings.append(
                 self._make_finding(
-                    title=(
-                        f"Reflective DLL loading in {process_name} (PID {pid})"
-                    ),
+                    title=(f"Reflective DLL loading in {process_name} (PID {pid})"),
                     description=(
                         f"Reflective loading indicator found in '{process_name}' "
                         f"(PID {pid}) at {address}: {indicator}. This technique loads "

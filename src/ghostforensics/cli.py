@@ -6,7 +6,6 @@ import datetime
 import json
 import time
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -102,9 +101,13 @@ def _run_full_analysis(data: dict, settings: Settings) -> ForensicsReport:
 @app.command()
 def analyze(
     dump_path: str = typer.Argument(help="Path to memory dump file (.raw, .dmp, .vmem, or .json)"),
-    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output report file path (.html or .json)"),
-    config: Optional[str] = typer.Option(None, "--config", "-c", help="Path to config YAML file"),
-    format: str = typer.Option("console", "--format", "-f", help="Output format: console, html, json"),
+    output: str | None = typer.Option(
+        None, "--output", "-o", help="Output report file path (.html or .json)"
+    ),
+    config: str | None = typer.Option(None, "--config", "-c", help="Path to config YAML file"),
+    format: str = typer.Option(
+        "console", "--format", "-f", help="Output format: console, html, json"
+    ),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress console output"),
 ) -> None:
     """Analyze a memory dump and generate a forensics report."""
@@ -144,8 +147,12 @@ def processes(
     console.print(f"[bold]Processes: {len(procs)}[/bold]")
     for proc in procs:
         style = "red" if proc.is_suspicious else ""
-        flags = f" [red]<< {', '.join(proc.suspicious_flags)}[/red]" if proc.suspicious_flags else ""
-        console.print(f"  [{style}]PID {proc.pid:>6} | PPID {proc.ppid:>6} | {proc.name}{flags}[/{style}]")
+        flags = (
+            f" [red]<< {', '.join(proc.suspicious_flags)}[/red]" if proc.suspicious_flags else ""
+        )
+        console.print(
+            f"  [{style}]PID {proc.pid:>6} | PPID {proc.ppid:>6} | {proc.name}{flags}[/{style}]"
+        )
 
     if findings:
         console.print(f"\n[bold red]Findings: {len(findings)}[/bold red]")
@@ -181,7 +188,7 @@ def network(
 @app.command(name="yara")
 def yara_scan(
     dump_path: str = typer.Argument(help="Path to memory dump file"),
-    rules_dir: Optional[str] = typer.Option(None, "--rules", "-r", help="Custom YARA rules directory"),
+    rules_dir: str | None = typer.Option(None, "--rules", "-r", help="Custom YARA rules directory"),
 ) -> None:
     """Scan memory dump with YARA rules."""
     settings = Settings.default()
@@ -194,9 +201,7 @@ def yara_scan(
 
     console.print(f"[bold]YARA Matches: {len(matches)}[/bold]")
     for m in matches:
-        console.print(
-            f"  [{m.severity.value}] {m.rule_name} — PID {m.pid} ({m.process_name})"
-        )
+        console.print(f"  [{m.severity.value}] {m.rule_name} — PID {m.pid} ({m.process_name})")
         if m.matched_strings:
             console.print(f"    Strings: {', '.join(m.matched_strings[:5])}")
 
@@ -230,7 +235,7 @@ def report(
     settings = Settings.default()
     data = _load_dump(dump_path)
 
-    console.print(f"[bold blue]Generating report...[/bold blue]")
+    console.print("[bold blue]Generating report...[/bold blue]")
     forensics_report = _run_full_analysis(data, settings)
 
     out_path = Path(output)

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import json
 import logging
-import urllib.request
 import urllib.error
+import urllib.request
 from typing import Any
 
 from ghostforensics.config import ReputationConfig
@@ -136,10 +136,13 @@ class ReputationChecker:
         url = f"https://api.abuseipdb.com/api/v2/check?ipAddress={ioc.value}&maxAgeInDays=90"
 
         try:
-            req = urllib.request.Request(url, headers={
-                "Key": api_key,
-                "Accept": "application/json",
-            })
+            req = urllib.request.Request(
+                url,
+                headers={
+                    "Key": api_key,
+                    "Accept": "application/json",
+                },
+            )
             with urllib.request.urlopen(req, timeout=30) as resp:
                 data = json.loads(resp.read())
 

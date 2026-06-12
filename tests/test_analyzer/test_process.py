@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from ghostforensics.analyzer.process import ProcessAnalyzer
 from ghostforensics.models import Severity
 
@@ -98,7 +96,9 @@ class TestNameMasquerading:
         data = {
             "processes": [
                 {
-                    "pid": 4444, "ppid": 100, "name": "svchost.exe",
+                    "pid": 4444,
+                    "ppid": 100,
+                    "name": "svchost.exe",
                     "path": "C:\\Users\\Temp\\svchost.exe",
                 },
             ]
@@ -148,7 +148,12 @@ class TestParentMismatch:
             "processes": [
                 {"pid": 4, "ppid": 0, "name": "System"},
                 {"pid": 100, "ppid": 4, "name": "explorer.exe"},
-                {"pid": 604, "ppid": 100, "name": "lsass.exe", "path": "C:\\Windows\\System32\\lsass.exe"},
+                {
+                    "pid": 604,
+                    "ppid": 100,
+                    "name": "lsass.exe",
+                    "path": "C:\\Windows\\System32\\lsass.exe",
+                },
             ]
         }
         findings = analyzer.analyze(data)
@@ -166,8 +171,18 @@ class TestDuplicateSystemProcesses:
             "processes": [
                 {"pid": 4, "ppid": 0, "name": "System"},
                 {"pid": 528, "ppid": 4, "name": "wininit.exe"},
-                {"pid": 604, "ppid": 528, "name": "lsass.exe", "path": "C:\\Windows\\System32\\lsass.exe"},
-                {"pid": 5000, "ppid": 1, "name": "lsass.exe", "path": "C:\\Users\\Public\\lsass.exe"},
+                {
+                    "pid": 604,
+                    "ppid": 528,
+                    "name": "lsass.exe",
+                    "path": "C:\\Windows\\System32\\lsass.exe",
+                },
+                {
+                    "pid": 5000,
+                    "ppid": 1,
+                    "name": "lsass.exe",
+                    "path": "C:\\Users\\Public\\lsass.exe",
+                },
             ]
         }
         findings = analyzer.analyze(data)

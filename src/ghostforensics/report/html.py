@@ -9,7 +9,6 @@ from jinja2 import Environment, FileSystemLoader
 from ghostforensics.config import TEMPLATES_DIR
 from ghostforensics.models import ForensicsReport, Severity
 
-
 _SEVERITY_COLORS = {
     Severity.CRITICAL: "#ff4444",
     Severity.HIGH: "#ff8800",

@@ -7,10 +7,10 @@ import re
 from typing import Any
 
 from ghostforensics.models import (
+    IOC,
     Connection,
     Finding,
     ForensicsReport,
-    IOC,
     IOCType,
     Process,
     Severity,
@@ -19,29 +19,30 @@ from ghostforensics.models import (
 
 # Regex patterns for IOC extraction.
 _IP_PATTERN = re.compile(
-    r'\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b'
+    r"\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b"
 )
 _DOMAIN_PATTERN = re.compile(
-    r'\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+(?:[a-zA-Z]{2,63})\b'
+    r"\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+(?:[a-zA-Z]{2,63})\b"
 )
-_URL_PATTERN = re.compile(
-    r'https?://[^\s<>"\')\]}{,]+'
-)
-_MD5_PATTERN = re.compile(r'\b[a-fA-F0-9]{32}\b')
-_SHA1_PATTERN = re.compile(r'\b[a-fA-F0-9]{40}\b')
-_SHA256_PATTERN = re.compile(r'\b[a-fA-F0-9]{64}\b')
-_REGISTRY_PATTERN = re.compile(
-    r'(?:HKLM|HKCU|HKCR|HKU|HKCC)\\[^\s<>"\']+', re.IGNORECASE
-)
-_EMAIL_PATTERN = re.compile(
-    r'\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b'
-)
+_URL_PATTERN = re.compile(r'https?://[^\s<>"\')\]}{,]+')
+_MD5_PATTERN = re.compile(r"\b[a-fA-F0-9]{32}\b")
+_SHA1_PATTERN = re.compile(r"\b[a-fA-F0-9]{40}\b")
+_SHA256_PATTERN = re.compile(r"\b[a-fA-F0-9]{64}\b")
+_REGISTRY_PATTERN = re.compile(r'(?:HKLM|HKCU|HKCR|HKU|HKCC)\\[^\s<>"\']+', re.IGNORECASE)
+_EMAIL_PATTERN = re.compile(r"\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b")
 
 # Common false-positive domains and IPs to exclude.
 _FP_DOMAINS = {
-    "www.w3.org", "schemas.microsoft.com", "www.microsoft.com",
-    "go.microsoft.com", "localhost", "example.com", "test.com",
-    "schema.org", "purl.org", "ns.adobe.com",
+    "www.w3.org",
+    "schemas.microsoft.com",
+    "www.microsoft.com",
+    "go.microsoft.com",
+    "localhost",
+    "example.com",
+    "test.com",
+    "schema.org",
+    "purl.org",
+    "ns.adobe.com",
 }
 _FP_IPS = {"0.0.0.0", "127.0.0.1", "255.255.255.255"}
 
@@ -92,9 +93,11 @@ class IOCExtractor:
         for proc in data.get("processes", []):
             cmdline = proc.get("cmdline", "")
             path = proc.get("path", "")
-            iocs.extend(self._extract_from_text(
-                f"{cmdline} {path}", source=f"process:{proc.get('name', '')}"
-            ))
+            iocs.extend(
+                self._extract_from_text(
+                    f"{cmdline} {path}", source=f"process:{proc.get('name', '')}"
+                )
+            )
 
         for conn in data.get("connections", []):
             remote = conn.get("remote_addr", "")
@@ -119,11 +122,13 @@ class IOCExtractor:
         for conn in connections:
             if conn.remote_addr:
                 severity = Severity.HIGH if conn.suspicious else Severity.MEDIUM
-                iocs.extend(self._add_ip(
-                    conn.remote_addr,
-                    context=f"connection from {conn.process_name} (PID {conn.pid})",
-                    severity=severity,
-                ))
+                iocs.extend(
+                    self._add_ip(
+                        conn.remote_addr,
+                        context=f"connection from {conn.process_name} (PID {conn.pid})",
+                        severity=severity,
+                    )
+                )
         return iocs
 
     def _extract_from_findings(self, findings: list[Finding]) -> list[IOC]:
@@ -135,9 +140,7 @@ class IOCExtractor:
             for v in finding.evidence.values():
                 if isinstance(v, str):
                     text += f" {v}"
-            iocs.extend(self._extract_from_text(
-                text, source=f"finding:{finding.analyzer}"
-            ))
+            iocs.extend(self._extract_from_text(text, source=f"finding:{finding.analyzer}"))
         return iocs
 
     def _extract_from_yara(self, yara_matches: list[YaraMatch]) -> list[IOC]:
@@ -145,9 +148,7 @@ class IOCExtractor:
         iocs: list[IOC] = []
         for ym in yara_matches:
             text = " ".join(ym.matched_strings)
-            iocs.extend(self._extract_from_text(
-                text, source=f"yara:{ym.rule_name}"
-            ))
+            iocs.extend(self._extract_from_text(text, source=f"yara:{ym.rule_name}"))
         return iocs
 
     # -- Low-level extraction ----------------------------------------------
@@ -174,25 +175,31 @@ class IOCExtractor:
             if domain in _FP_DOMAINS:
                 continue
             # Skip if it looks like a file extension or version number.
-            if re.match(r'^\d+\.\d+\.\d+', domain):
+            if re.match(r"^\d+\.\d+\.\d+", domain):
                 continue
             iocs.extend(self._add_ioc(IOCType.DOMAIN, domain, source, Severity.LOW))
 
         # SHA-256 (check before SHA-1 and MD5 to avoid substring matches).
         for match in _SHA256_PATTERN.finditer(text):
-            iocs.extend(self._add_ioc(IOCType.FILE_HASH_SHA256, match.group().lower(), source, severity))
+            iocs.extend(
+                self._add_ioc(IOCType.FILE_HASH_SHA256, match.group().lower(), source, severity)
+            )
 
         # SHA-1 (only if not part of a SHA-256).
         sha256_positions = {m.start() for m in _SHA256_PATTERN.finditer(text)}
         for match in _SHA1_PATTERN.finditer(text):
             if match.start() not in sha256_positions:
-                iocs.extend(self._add_ioc(IOCType.FILE_HASH_SHA1, match.group().lower(), source, severity))
+                iocs.extend(
+                    self._add_ioc(IOCType.FILE_HASH_SHA1, match.group().lower(), source, severity)
+                )
 
         # MD5
         sha1_positions = {m.start() for m in _SHA1_PATTERN.finditer(text)}
         for match in _MD5_PATTERN.finditer(text):
             if match.start() not in sha256_positions and match.start() not in sha1_positions:
-                iocs.extend(self._add_ioc(IOCType.FILE_HASH_MD5, match.group().lower(), source, severity))
+                iocs.extend(
+                    self._add_ioc(IOCType.FILE_HASH_MD5, match.group().lower(), source, severity)
+                )
 
         # Registry keys
         for match in _REGISTRY_PATTERN.finditer(text):

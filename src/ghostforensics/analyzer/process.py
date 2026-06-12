@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 # Try importing Volatility3; fall back gracefully.
 try:
     import volatility3  # noqa: F401
-    from volatility3.framework import contexts, automagic
-    from volatility3.plugins.windows import pslist, pstree
+    from volatility3.framework import automagic, contexts
+    from volatility3.plugins.windows import pslist
 
     HAS_VOL3 = True
 except ImportError:
@@ -86,11 +86,12 @@ class ProcessAnalyzer(BaseAnalyzer):
             return []
         try:
             ctx = contexts.Context()
-            automagics = automagic.available(ctx)
+            automagic.available(ctx)
             plugin = pslist.PsList(ctx, config_path="plugins.PsList", progress_callback=None)
             treegrid = plugin.run()
 
             processes: list[Process] = []
+
             def visitor(node, _accumulator):
                 values = node.values
                 proc = Process(
@@ -192,30 +193,34 @@ class ProcessAnalyzer(BaseAnalyzer):
                     "c:\\windows\\system32\\",
                 ]
                 path_lower = proc.path.lower()
-                if lower_name in ("svchost.exe", "csrss.exe", "lsass.exe", "services.exe"):
-                    if not any(ep in path_lower for ep in expected_paths):
-                        findings.append(
-                            self._make_finding(
-                                title=f"Process name masquerading: {proc.name} (PID {proc.pid})",
-                                description=(
-                                    f"Process '{proc.name}' is running from '{proc.path}' "
-                                    "instead of the expected system directory. This is a "
-                                    "common technique used by malware to blend in."
-                                ),
-                                severity=Severity.HIGH.value,
-                                evidence={
-                                    "pid": proc.pid,
-                                    "name": proc.name,
-                                    "actual_path": proc.path,
-                                    "expected_path": "\\Windows\\System32\\",
-                                },
-                                remediation=(
-                                    "Quarantine the process and its binary. Submit the "
-                                    "binary for malware analysis."
-                                ),
-                                mitre_attack=["T1036.005"],  # Match Legitimate Name or Location
-                            )
+                if lower_name in (
+                    "svchost.exe",
+                    "csrss.exe",
+                    "lsass.exe",
+                    "services.exe",
+                ) and not any(ep in path_lower for ep in expected_paths):
+                    findings.append(
+                        self._make_finding(
+                            title=f"Process name masquerading: {proc.name} (PID {proc.pid})",
+                            description=(
+                                f"Process '{proc.name}' is running from '{proc.path}' "
+                                "instead of the expected system directory. This is a "
+                                "common technique used by malware to blend in."
+                            ),
+                            severity=Severity.HIGH.value,
+                            evidence={
+                                "pid": proc.pid,
+                                "name": proc.name,
+                                "actual_path": proc.path,
+                                "expected_path": "\\Windows\\System32\\",
+                            },
+                            remediation=(
+                                "Quarantine the process and its binary. Submit the "
+                                "binary for malware analysis."
+                            ),
+                            mitre_attack=["T1036.005"],  # Match Legitimate Name or Location
                         )
+                    )
         return findings
 
     def _detect_suspicious_names(self, processes: list[Process]) -> list[Finding]:

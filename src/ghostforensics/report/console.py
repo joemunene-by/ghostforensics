@@ -10,7 +10,6 @@ from rich.tree import Tree
 
 from ghostforensics.models import ForensicsReport, Severity
 
-
 _SEVERITY_COLORS = {
     Severity.CRITICAL: "bold red",
     Severity.HIGH: "red",
@@ -53,7 +52,9 @@ class ConsoleReporter:
         header.append(f"Duration: {report.duration_seconds:.2f}s\n", style="dim")
         if report.os_profile:
             header.append(f"Profile: {report.os_profile}\n", style="dim")
-        self.console.print(Panel(header, title="[bold]Analysis Summary[/bold]", border_style="blue"))
+        self.console.print(
+            Panel(header, title="[bold]Analysis Summary[/bold]", border_style="blue")
+        )
 
     def _render_severity_summary(self, report: ForensicsReport) -> None:
         summary = report.severity_summary
@@ -79,16 +80,20 @@ class ConsoleReporter:
             return
 
         # Sort by severity.
-        sev_order = {Severity.CRITICAL: 0, Severity.HIGH: 1, Severity.MEDIUM: 2, Severity.LOW: 3, Severity.INFO: 4}
+        sev_order = {
+            Severity.CRITICAL: 0,
+            Severity.HIGH: 1,
+            Severity.MEDIUM: 2,
+            Severity.LOW: 3,
+            Severity.INFO: 4,
+        }
         findings.sort(key=lambda f: sev_order.get(f.severity, 5))
 
         self.console.print(Panel("[bold]Findings[/bold]", border_style="red"))
         for finding in findings:
             color = _SEVERITY_COLORS.get(finding.severity, "white")
             icon = _SEVERITY_ICONS.get(finding.severity, "[?]")
-            self.console.print(
-                f"  [{color}]{icon} {finding.title}[/{color}]"
-            )
+            self.console.print(f"  [{color}]{icon} {finding.title}[/{color}]")
             self.console.print(f"      {finding.description}", style="dim")
             if finding.remediation:
                 self.console.print(f"      Remediation: {finding.remediation}", style="green")
@@ -173,8 +178,7 @@ class ConsoleReporter:
         for ym in report.yara_matches:
             color = _SEVERITY_COLORS.get(ym.severity, "white")
             self.console.print(
-                f"  [{color}]Rule: {ym.rule_name}[/{color}] "
-                f"(PID {ym.pid}, {ym.process_name})"
+                f"  [{color}]Rule: {ym.rule_name}[/{color}] (PID {ym.pid}, {ym.process_name})"
             )
             if ym.description:
                 self.console.print(f"      {ym.description}", style="dim")
@@ -204,9 +208,7 @@ class ConsoleReporter:
             )
         self.console.print(table)
         if len(report.iocs) > 100:
-            self.console.print(
-                f"  ... and {len(report.iocs) - 100} more IOCs", style="dim"
-            )
+            self.console.print(f"  ... and {len(report.iocs) - 100} more IOCs", style="dim")
         self.console.print()
 
     def _render_footer(self, report: ForensicsReport) -> None:

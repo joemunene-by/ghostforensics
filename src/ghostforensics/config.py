@@ -89,23 +89,23 @@ SUSPICIOUS_PROCESS_NAMES: list[str] = [
 
 # Ports commonly used by malware.
 SUSPICIOUS_PORTS: set[int] = {
-    4444,   # Metasploit default
-    5555,   # Android debug / backdoors
-    1337,   # Common backdoor
+    4444,  # Metasploit default
+    5555,  # Android debug / backdoors
+    1337,  # Common backdoor
     31337,  # Back Orifice
-    8080,   # Common C2
-    8443,   # Common C2
-    6666,   # IRC backdoor
-    6667,   # IRC
-    6697,   # IRC SSL
-    9001,   # Tor
-    9050,   # Tor SOCKS
-    9150,   # Tor Browser
-    3389,   # RDP (suspicious if outbound)
-    5900,   # VNC
-    5985,   # WinRM HTTP
-    5986,   # WinRM HTTPS
-    1080,   # SOCKS proxy
+    8080,  # Common C2
+    8443,  # Common C2
+    6666,  # IRC backdoor
+    6667,  # IRC
+    6697,  # IRC SSL
+    9001,  # Tor
+    9050,  # Tor SOCKS
+    9150,  # Tor Browser
+    3389,  # RDP (suspicious if outbound)
+    5900,  # VNC
+    5985,  # WinRM HTTP
+    5986,  # WinRM HTTPS
+    1080,  # SOCKS proxy
     12345,  # NetBus
     54321,  # Backdoors
 }
@@ -168,12 +168,8 @@ class Settings:
         if "reputation" in data:
             rep_data = data["reputation"]
             # Allow environment variable overrides for API keys.
-            rep_data.setdefault(
-                "virustotal_api_key", os.environ.get("VT_API_KEY", "")
-            )
-            rep_data.setdefault(
-                "abuseipdb_api_key", os.environ.get("ABUSEIPDB_API_KEY", "")
-            )
+            rep_data.setdefault("virustotal_api_key", os.environ.get("VT_API_KEY", ""))
+            rep_data.setdefault("abuseipdb_api_key", os.environ.get("ABUSEIPDB_API_KEY", ""))
             settings.reputation = ReputationConfig(**rep_data)
         if "report" in data:
             settings.report = ReportConfig(**data["report"])
