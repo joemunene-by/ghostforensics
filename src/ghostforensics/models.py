@@ -148,7 +148,8 @@ class IOC(BaseModel):
             "name": f"{self.type.value}: {self.value}",
             "description": self.context,
             "indicator_types": ["malicious-activity"],
-            "valid_from": self.first_seen or datetime.datetime.now(datetime.UTC).isoformat(),
+            "valid_from": self.first_seen
+            or datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "labels": self.tags,
             "custom_properties": {
                 "x_severity": self.severity.value,

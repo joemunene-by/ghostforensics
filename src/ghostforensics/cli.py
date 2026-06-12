@@ -73,7 +73,7 @@ def _run_full_analysis(data: dict, settings: Settings) -> ForensicsReport:
 
     report = ForensicsReport(
         dump_path=data.get("dump_path", "unknown"),
-        analysis_time=datetime.datetime.now(datetime.UTC).isoformat(),
+        analysis_time=datetime.datetime.now(datetime.timezone.utc).isoformat(),
         os_profile=data.get("os_profile", ""),
         processes=processes,
         connections=connections,
